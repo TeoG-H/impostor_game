@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/inputScreen_original"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <Button
+            android:id="@+id/btnFaraAjutor"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Fara Ajutor"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btnCuAjutor"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Cu Ajutor"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btnCuvantSimilar"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Cuvant Similar"/>
+
+    </LinearLayout>
+
+
+
+    <!-- Ecran input -->
+    <LinearLayout
+        android:id="@+id/inputScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Introdu numărul de jucători"
+            android:textSize="18sp"
+            android:layout_marginBottom="12dp"/>
+
+        <EditText
+            android:id="@+id/inputNumber"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:hint="ex: 5"
+            android:gravity="center"
+            android:inputType="number"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/generateBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Generează"/>
+    </LinearLayout>
+
+    <!-- Ecran joc -->
+    <LinearLayout
+        android:id="@+id/squaresScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <GridLayout
+            android:id="@+id/grid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:padding="8dp"/>
+
+        <Button
+            android:id="@+id/reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reset"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+
+</FrameLayout>
