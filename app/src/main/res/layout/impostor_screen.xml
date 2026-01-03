@@ -30,7 +30,15 @@
             android:id="@+id/btnCuvantSimilar"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:text="Cuvant Similar"/>
+            android:text="Cuvant Similar"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btnNumar"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Numar"
+            android:layout_marginBottom="12dp"/>
 
     </LinearLayout>
 

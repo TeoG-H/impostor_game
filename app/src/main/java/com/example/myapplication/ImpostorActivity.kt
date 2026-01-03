@@ -30,8 +30,9 @@ class ImpostorActivity : ComponentActivity() {
         val btnFaraAjutor = findViewById<Button>(R.id.btnFaraAjutor)
         val btnCuAjutor = findViewById<Button>(R.id.btnCuAjutor)
         val btnCuvantSimilar = findViewById<Button>(R.id.btnCuvantSimilar)
+        val btnNumar = findViewById<Button>(R.id.btnNumar)
+        var players=0
 
-        // ====== SELECTARE MOD ======
         btnFaraAjutor.setOnClickListener {
             selectedMode = GameMode.FARA_AJUTOR
             modeScreen.visibility = View.GONE
@@ -50,10 +51,18 @@ class ImpostorActivity : ComponentActivity() {
             inputScreen.visibility = View.VISIBLE
         }
 
-        // ====== START JOC ======
-        generateBtn.setOnClickListener {
-            val players = inputNumber.text.toString().toInt()
+        btnNumar.setOnClickListener {
+            selectedMode = GameMode.NUMAR
+            modeScreen.visibility = View.GONE
+            inputScreen.visibility = View.VISIBLE
+        }
 
+
+        generateBtn.setOnClickListener {
+
+            players = inputNumber.text.toString().toInt()
+
+            if (players <= 0 ) return@setOnClickListener
             game.start(players, selectedMode!!)
 
             inputScreen.visibility = View.GONE
@@ -64,12 +73,12 @@ class ImpostorActivity : ComponentActivity() {
         }
 
 
-        // ====== RESET ======
+
         resetBtn.setOnClickListener {
             grid.removeAllViews()
-            squaresScreen.visibility = View.GONE
-            inputScreen.visibility = View.GONE
-            modeScreen.visibility = View.VISIBLE
+            game.start(players, selectedMode!!)
+            squaresScreen.visibility = View.VISIBLE
+            createSquares(grid, players)
         }
     }
 
