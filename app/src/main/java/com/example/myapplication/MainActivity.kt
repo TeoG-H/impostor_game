@@ -14,5 +14,8 @@ class MainActivity : ComponentActivity() {
         findViewById<Button>(R.id.btnImpostor).setOnClickListener {
             startActivity(Intent(this, ImpostorActivity::class.java))
         }
+        findViewById<Button>(R.id.btnMafia).setOnClickListener {
+            startActivity(Intent(this, MafiaActivity::class.java))
+        }
     }
 }

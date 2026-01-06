@@ -12,6 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
 
+        <!-- ACTIVITY JOC MAFIA -->
+        <activity
+            android:name=".MafiaActivity"
+            android:exported="false" />
+
         <!-- ACTIVITY JOC IMPOSTOR -->
         <activity
             android:name=".ImpostorActivity"
