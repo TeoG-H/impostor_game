@@ -2,7 +2,7 @@ package com.example.myapplication
 import kotlin.random.Random
 
 enum class MafiaRole(val displayName: String) {
-    IMPOSTOR("IMPOSTOR"),
+    IMPOSTOR("KILLER"),
     MEDIC("MEDIC"),
     POLITIST("POLIȚIST"),
     DENTIST("DENTIST"),
@@ -16,7 +16,6 @@ class MafiaGame {
     fun start(players: Int) {
         rolesForPlayers.clear()
 
-        // BAZA
         rolesForPlayers.add(MafiaRole.IMPOSTOR)
         rolesForPlayers.add(MafiaRole.MEDIC)
         rolesForPlayers.add(MafiaRole.SATEAN)

@@ -12,13 +12,14 @@ class ImpostorActivity : ComponentActivity() {
     private lateinit var game: ImpostorGame
     private var selectedMode: GameMode? = null
 
+    // savedIntanceState daca introduc numarul de jucatori si apoi schimb ceva sau dau un reset cand reconstruiesc sa imi ramana
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.impostor_screen)
 
         game = ImpostorGame()
 
-        val modeScreen = findViewById<LinearLayout>(R.id.inputScreen_original)
+        val modeScreen = findViewById<FrameLayout>(R.id.inputScreen_original)
         val inputScreen = findViewById<LinearLayout>(R.id.inputScreen)
         val squaresScreen = findViewById<LinearLayout>(R.id.squaresScreen)
 
@@ -26,6 +27,8 @@ class ImpostorActivity : ComponentActivity() {
         val generateBtn = findViewById<Button>(R.id.generateBtn)
         val grid = findViewById<GridLayout>(R.id.grid)
         val resetBtn = findViewById<Button>(R.id.reset)
+        val btnExit = findViewById<ImageButton>(R.id.btnExit)
+        val btnExit2 = findViewById<ImageButton>(R.id.btnExit2)
 
         val btnFaraAjutor = findViewById<Button>(R.id.btnFaraAjutor)
         val btnCuAjutor = findViewById<Button>(R.id.btnCuAjutor)
@@ -62,7 +65,7 @@ class ImpostorActivity : ComponentActivity() {
 
             players = inputNumber.text.toString().toInt()
 
-            if (players <= 0 ) return@setOnClickListener
+            if (players <= 0 || players >10) return@setOnClickListener
             game.start(players, selectedMode!!)
 
             inputScreen.visibility = View.GONE
@@ -80,18 +83,29 @@ class ImpostorActivity : ComponentActivity() {
             squaresScreen.visibility = View.VISIBLE
             createSquares(grid, players)
         }
+
+        btnExit.setOnClickListener {
+            grid.removeAllViews()
+
+            squaresScreen.visibility = View.GONE
+            inputScreen.visibility = View.GONE
+            modeScreen.visibility = View.VISIBLE
+        }
+
+        btnExit2.setOnClickListener {
+            finish()
+        }
+
     }
 
     private fun createSquares(grid: GridLayout, count: Int) {
         val context = grid.context
 
+        //converteste dp la pixeli
         fun dp(value: Int): Int =
-            TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                value.toFloat(),
-                context.resources.displayMetrics
-            ).toInt()
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value.toFloat(), context.resources.displayMetrics).toInt()
 
+        //dimensiunea fiecarui patrat
         val size = dp(120)
         val margin = dp(10)
 
@@ -114,7 +128,7 @@ class ImpostorActivity : ComponentActivity() {
                     Gravity.CENTER
                 )
                 textSize = 18f
-                setTextColor(0xFFFFFFFFa.toInt())
+                setTextColor(0xFFFFFFFF.toInt())
                 textAlignment = View.TEXT_ALIGNMENT_CENTER
                 visibility = View.GONE
             }
@@ -139,8 +153,6 @@ class ImpostorActivity : ComponentActivity() {
                         }
                     }
                 }
-
-
 
             grid.addView(cell)
         }

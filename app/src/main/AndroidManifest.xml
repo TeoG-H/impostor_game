@@ -12,23 +12,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
 
-        <!-- ACTIVITY JOC MAFIA -->
         <activity
             android:name=".MafiaActivity"
             android:exported="false" />
 
-        <!-- ACTIVITY JOC IMPOSTOR -->
         <activity
             android:name=".ImpostorActivity"
             android:exported="false" />
 
-        <!-- ACTIVITY PRINCIPAL (MENIU) -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MyApplication">
-            <intent-filter>
+            <intent-filter>   <!-- asta imi face sa apara aplicatia pe ecranul telefonului atunci cand e instalata -->
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

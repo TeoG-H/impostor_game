@@ -12,6 +12,7 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.menu_screen)
 
         findViewById<Button>(R.id.btnImpostor).setOnClickListener {
+            // intent imi deschide alt ecran
             startActivity(Intent(this, ImpostorActivity::class.java))
         }
         findViewById<Button>(R.id.btnMafia).setOnClickListener {

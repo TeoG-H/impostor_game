@@ -48,10 +48,7 @@ class MafiaActivity : ComponentActivity() {
     private fun createSquares(grid: GridLayout, count: Int) {
         val context = grid.context
 
-        fun dp(v: Int) = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, v.toFloat(),
-            context.resources.displayMetrics
-        ).toInt()
+        fun dp(v: Int) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), context.resources.displayMetrics).toInt()
 
         repeat(count) { index ->
             val cellIndex = index + 1
