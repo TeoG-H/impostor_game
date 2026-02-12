@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "288530476239",
+    "project_id": "party-game-d7f13",
+    "storage_bucket": "party-game-d7f13.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:288530476239:android:e05990db1cc77745af9bba",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "288530476239-u2ipq4uj5g374u150r8l7vaqueck2mjj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.myapplication",
+            "certificate_hash": "3580134bcbb65f4f08233e36d89dcb079b77f26b"
+          }
+        },
+        {
+          "client_id": "288530476239-s8vgn6qff350tev5db0bjtn0tpbqgsns.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCprqmVWuQzMpbKSKsYbrAvUBl42w_JWGA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "288530476239-s8vgn6qff350tev5db0bjtn0tpbqgsns.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,12 +1,12 @@
-package com.example.myapplication
+package com.example.myapplication.game
 import kotlin.random.Random
 
 enum class MafiaRole(val displayName: String) {
     IMPOSTOR("KILLER"),
     MEDIC("MEDIC"),
-    POLITIST("POLIȚIST"),
+    POLITIST("POLITIST"),
     DENTIST("DENTIST"),
-    SATEAN("SĂTEAN")
+    SATEAN("SATEAN")
 }
 
 class MafiaGame {
@@ -36,6 +36,6 @@ class MafiaGame {
     }
 
     fun getRoleForPlayer(index: Int): String {
-        return rolesForPlayers[index - 1].displayName
+        return rolesForPlayers[index].displayName
     }
 }
