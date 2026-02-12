@@ -1,7 +1,6 @@
 package com.example.myapplication.uii
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -13,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -21,27 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.data.GameMode
-import com.example.myapplication.data.UserWordsRepository
-import com.example.myapplication.data.WordRepository
-import com.example.myapplication.game.ProvocariGame
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.ui.theme.AppColors
 import com.example.myapplication.ui.theme.AppTypography
-import kotlinx.coroutines.launch
 import com.example.myapplication.ui.theme.ButtonS
 import com.example.myapplication.ui.theme.SecondaryButton
-
-enum class ProvocarileUiState {
-    MENU,
-    GAME,
-    VIEW_CHALLENGES,
-    ADD_CHALLENGE
-}
-
-enum class ChallengeSource {
-    DEFAULT,
-    PERSONALIZAT
-}
+import com.example.myapplication.uii.View.*
 
 class ProvocariActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,46 +38,40 @@ class ProvocariActivity : ComponentActivity() {
 }
 
 @Composable
-fun ProvocariScreen() {
+fun ProvocariScreen(
+    viewModel: ProvocariViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val game = remember { ProvocariGame() }
-    val wordsRepo = remember { UserWordsRepository() }
-    val scope = rememberCoroutineScope()
-    var screen by remember { mutableStateOf(ProvocarileUiState.MENU) }
-    var currentChallenge by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var challengeSource by remember { mutableStateOf(ChallengeSource.PERSONALIZAT) }
-    var cachedChallenges by remember { mutableStateOf<List<String>>(emptyList()) }
-    var userChallenges by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-    var newChallenge by remember { mutableStateOf("") }
-    var showSuccessDialog by remember { mutableStateOf(false) }
 
+    var newChallenge by remember { mutableStateOf("") }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(Brush.verticalGradient(colors = AppColors.backgroundGradient)),
-        contentAlignment = Alignment.Center)
-    {
-        Column(modifier = Modifier.width(340.dp)
-            .background(AppColors.White, RoundedCornerShape(16.dp))
-            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .width(340.dp)
+                .background(AppColors.White, RoundedCornerShape(16.dp))
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp))
-        {
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
 
-            when (screen) {
-                ProvocarileUiState.MENU -> {
+            when (uiState.screen) {
+                ChallengeState.MENU -> {
+
                     Text(
                         text = "Provocări",
                         style = AppTypography.titleLarge,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = AppColors.VeryLightPurple
                         )
@@ -104,6 +83,7 @@ fun ProvocariScreen() {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Sursa provocărilor",
@@ -112,63 +92,44 @@ fun ProvocariScreen() {
                                     color = AppColors.Purple
                                 )
                                 Text(
-                                    text = if (challengeSource == ChallengeSource.DEFAULT)
-                                        "Doar provocări default"
-                                    else
-                                        "Default + personalizate",
+                                    text =
+                                        if (uiState.challengeSource == ChallengeSource.DEFAULT)
+                                            "Doar provocări default"
+                                        else
+                                            "Default + personalizate",
                                     fontSize = 14.sp,
                                     color = AppColors.Purple.copy(alpha = 0.7f)
                                 )
                             }
 
                             Switch(
-                                checked = challengeSource == ChallengeSource.PERSONALIZAT,
-                                onCheckedChange = { isChecked ->
-                                    challengeSource = if (isChecked)
-                                        ChallengeSource.PERSONALIZAT
-                                    else
-                                        ChallengeSource.DEFAULT
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = AppColors.Purple,
-                                    checkedTrackColor = AppColors.Purple.copy(alpha = 0.5f)
-                                )
+                                checked = uiState.challengeSource == ChallengeSource.PERSONALIZAT,
+                                onCheckedChange = {
+                                    viewModel.changeSource(
+                                        if (it)
+                                            ChallengeSource.PERSONALIZAT
+                                        else
+                                            ChallengeSource.DEFAULT
+                                    )
+                                }
                             )
                         }
                     }
 
-                    ButtonS(text = "Start", isLoading = isLoading) {
-                        isLoading = true
-                        scope.launch {
-                            try {
-                                if (challengeSource == ChallengeSource.DEFAULT) {
-                                    cachedChallenges =  WordRepository.provocari
-                                } else {
-                                    val userChallengesList = wordsRepo.getWords(GameMode.PROVOCARI)
-                                    val userList = userChallengesList.map { it.second }
-                                    cachedChallenges = (WordRepository.provocari + userList).distinct()
-                                }
-
-                                game.loadFromCache(cachedChallenges)
-                                currentChallenge = game.getNextChallenge()
-
-                                screen = ProvocarileUiState.GAME
-
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Eroare la încărcarea provocărilor", Toast.LENGTH_SHORT).show()
-                            } finally {
-                                isLoading = false
-                            }
-                        }
+                    ButtonS(
+                        text = "Start",
+                        isLoading = uiState.isLoading
+                    ) {
+                        viewModel.startGame()
                     }
 
                     ButtonS("Vezi provocările") {
-                        screen = ProvocarileUiState.VIEW_CHALLENGES
+                        viewModel.goTo(ChallengeState.VIEW_CHALLENGES)
                     }
 
                     ButtonS("Adaugă o provocare nouă") {
                         newChallenge = ""
-                        screen = ProvocarileUiState.ADD_CHALLENGE
+                        viewModel.goTo(ChallengeState.ADD_CHALLENGE)
                     }
 
                     SecondaryButton("Înapoi") {
@@ -176,7 +137,7 @@ fun ProvocariScreen() {
                     }
                 }
 
-                ProvocarileUiState.GAME -> {
+                ChallengeState.GAME -> {
 
                     Card(
                         modifier = Modifier
@@ -184,8 +145,7 @@ fun ProvocariScreen() {
                             .padding(vertical = 16.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = AppColors.VeryLightPurple
-                        ),
-                        elevation = CardDefaults.cardElevation(4.dp)
+                        )
                     ) {
                         Box(
                             modifier = Modifier
@@ -193,7 +153,7 @@ fun ProvocariScreen() {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = currentChallenge,
+                                text = uiState.currentChallenge,
                                 style = AppTypography.titleLarge.copy(fontSize = 20.sp),
                                 textAlign = TextAlign.Center,
                                 color = AppColors.Purple
@@ -202,24 +162,18 @@ fun ProvocariScreen() {
                     }
 
                     ButtonS("Următoarea provocare") {
-                        currentChallenge = game.getNextChallenge()
+                        viewModel.nextChallenge()
                     }
 
                     SecondaryButton("Înapoi") {
-                        screen = ProvocarileUiState.MENU
+                        viewModel.goTo(ChallengeState.MENU)
                     }
                 }
 
-                ProvocarileUiState.VIEW_CHALLENGES -> {
+                ChallengeState.VIEW_CHALLENGES -> {
+
                     LaunchedEffect(Unit) {
-                        isLoading = true
-                        try {
-                            userChallenges = wordsRepo.getWords(GameMode.PROVOCARI)
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Eroare la încărcarea provocărilor", Toast.LENGTH_SHORT).show()
-                        } finally {
-                            isLoading = false
-                        }
+                        viewModel.loadUserChallenges()
                     }
 
                     Text(
@@ -228,35 +182,34 @@ fun ProvocariScreen() {
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
-                    if (isLoading) {
+                    if (uiState.isLoading) {
                         CircularProgressIndicator(
                             color = AppColors.Purple,
                             modifier = Modifier.padding(32.dp)
                         )
                     } else {
-                        if (userChallenges.isEmpty()) {
+
+                        if (uiState.userChallenges.isEmpty()) {
+
                             Text(
-                                text = "Nu ai provocări personalizate.\nAdaugă una nouă!",
-                                style = AppTypography.bodyMedium,
+                                text = "Nu ai provocari personalizate.\nAdauga una noua!",
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(32.dp),
                                 color = AppColors.Purple.copy(alpha = 0.6f)
                             )
+
                         } else {
+
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(max = 400.dp)
-                                    .padding(vertical = 8.dp)
                             ) {
-                                items(userChallenges) { (id, challenge) ->
+                                items(uiState.userChallenges) { (id, challenge) ->
                                     ChallengeItem(
                                         challenge = challenge,
                                         onDelete = {
-                                            userChallenges = userChallenges.filter { it.first != id }
-                                            scope.launch {
-                                                wordsRepo.deleteWord(GameMode.PROVOCARI, id)
-                                            }
+                                            viewModel.deleteChallenge(id)
                                         }
                                     )
                                 }
@@ -265,11 +218,12 @@ fun ProvocariScreen() {
                     }
 
                     SecondaryButton("Înapoi") {
-                        screen = ProvocarileUiState.MENU
+                        viewModel.goTo(ChallengeState.MENU)
                     }
                 }
 
-                ProvocarileUiState.ADD_CHALLENGE -> {
+                ChallengeState.ADD_CHALLENGE -> {
+
                     Text(
                         text = "Adaugă o provocare nouă",
                         style = AppTypography.titleLarge.copy(fontSize = 22.sp),
@@ -285,32 +239,30 @@ fun ProvocariScreen() {
                         maxLines = 4
                     )
 
-                    ButtonS(text = "Salvează", enabled = newChallenge.isNotBlank())
-                    {
-                        val challengeToAdd = newChallenge.trim()
+                    ButtonS(
+                        text = "Salvează",
+                        enabled = newChallenge.isNotBlank()
+                    ) {
+                        viewModel.addChallenge(newChallenge)
                         newChallenge = ""
-                        showSuccessDialog = true
-
-                        scope.launch {
-                            try {
-                                val success = wordsRepo.addWord(mode = GameMode.PROVOCARI, word = challengeToAdd, hint = "")
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Provocarea nu a putut fi adăugată", Toast.LENGTH_SHORT).show()
-                            }
-                        }
                     }
 
                     SecondaryButton("Înapoi") {
-                        screen = ProvocarileUiState.MENU
+                        viewModel.goTo(ChallengeState.MENU)
                     }
                 }
             }
         }
     }
 
-    if (showSuccessDialog) {
+    if (uiState.showSuccessDialog) {
         AlertDialog(
-            onDismissRequest = { showSuccessDialog = false },
+            onDismissRequest = { viewModel.dismissDialog() },
+            confirmButton = {
+                Button(onClick = { viewModel.dismissDialog() }) {
+                    Text("OK")
+                }
+            },
             title = {
                 Text(
                     text = "✓ Succes!",
@@ -319,26 +271,17 @@ fun ProvocariScreen() {
                 )
             },
             text = {
-                Text("Provocare adăugată cu succes!")
-            },
-            confirmButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.Purple
-                    ),
-                    onClick = { showSuccessDialog = false }
-                ) {
-                    Text("OK")
-                }
-            },
-            containerColor = AppColors.White
+                Text("Provocare adaugata cu succes!")
+            }
         )
     }
 }
 
 @Composable
-fun ChallengeItem(challenge: String, onDelete: () -> Unit)
-{
+fun ChallengeItem(
+    challenge: String,
+    onDelete: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -360,10 +303,7 @@ fun ChallengeItem(challenge: String, onDelete: () -> Unit)
                 modifier = Modifier.weight(1f)
             )
 
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(32.dp)
-            ) {
+            IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Șterge",

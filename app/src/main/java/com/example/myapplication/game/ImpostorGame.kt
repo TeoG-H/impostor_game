@@ -1,8 +1,6 @@
 package com.example.myapplication.game
 
 import com.example.myapplication.data.GameMode
-import com.example.myapplication.data.WordRepository
-import com.example.myapplication.data.UserWordsRepository
 import kotlin.random.Random
 
 class ImpostorGame {
@@ -11,49 +9,9 @@ class ImpostorGame {
     private var text = ""
     private var impostorIndex = 0
     private lateinit var mode: GameMode
-    private val userWordsRepo = UserWordsRepository()
 
-    /**
-     * Versiune ASYNC - folosește-o din coroutines
-     */
-    suspend fun startAsync(players: Int, mode: GameMode) {
-        this.mode = mode
-        impostorIndex = Random.Default.nextInt(1, players + 1)
-
-        when (mode) {
-            GameMode.FARA_AJUTOR, GameMode.NUMAR -> {
-                // Încearcă să ia cuvinte de la user
-                val userWords = userWordsRepo.getWords(mode)
-                text = if (userWords.isNotEmpty()) {
-                    userWords.random().second // al doilea element e cuvântul
-                } else {
-                    // Fallback la cuvintele default
-                    WordRepository.getWords(mode).random()
-                }
-            }
-            GameMode.CU_AJUTOR, GameMode.CUVANT_SIMILAR -> {
-                // Încearcă să ia perechi de la user
-                val userPairs = userWordsRepo.getWordsWithHint(mode)
-                pair = if (userPairs.isNotEmpty()) {
-                    val selected = userPairs.random()
-                    Pair(selected.second, selected.third) // word și hint
-                } else {
-                    // Fallback la perechile default
-                    WordRepository.getPair(mode).random()
-                }
-            }
-            GameMode.PROVOCARI -> {
-
-            }
-        }
-    }
-
-    fun startFromCache(
-        players: Int,
-        mode: GameMode,
-        words: List<String>,
-        pairs: List<Pair<String, String>>
-    ) {
+    fun start(players: Int, mode: GameMode, words: List<String>, pairs: List<Pair<String, String>>)
+    {
         this.mode = mode
         impostorIndex = Random.Default.nextInt(1, players + 1)
 
@@ -99,4 +57,37 @@ class ImpostorGame {
             }
         }
     }
+
+    /*
+     //private val userWordsRepo = UserWordsRepository()
+
+    suspend fun startAsync(players: Int, mode: GameMode) {
+        this.mode = mode
+        impostorIndex = Random.Default.nextInt(1, players + 1)
+
+        when (mode) {
+            GameMode.FARA_AJUTOR, GameMode.NUMAR -> {
+                val userWords = userWordsRepo.getWords(mode)
+                text = if (userWords.isNotEmpty()) {
+                    userWords.random().second
+                } else {
+                    WordRepository.getWords(mode).random()
+                }
+            }
+            GameMode.CU_AJUTOR, GameMode.CUVANT_SIMILAR -> {
+                val userPairs = userWordsRepo.getWordsWithHint(mode)
+                pair = if (userPairs.isNotEmpty()) {
+                    val selected = userPairs.random()
+                    Pair(selected.second, selected.third) // word și hint
+                } else {
+                    WordRepository.getPair(mode).random()
+                }
+            }
+            GameMode.PROVOCARI -> {
+
+            }
+        }
+    }
+
+     */
 }

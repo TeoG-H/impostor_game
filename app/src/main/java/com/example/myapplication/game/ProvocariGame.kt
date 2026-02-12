@@ -10,7 +10,6 @@ class ProvocariGame {
     private var challenges = listOf<String>()
     private var usedChallenges = mutableSetOf<String>()
     private var currentChallenge = ""
-    private val userWordsRepo = UserWordsRepository()
 
 
     fun loadFromCache(cachedChallenges: List<String>) {
@@ -20,7 +19,7 @@ class ProvocariGame {
 
     fun getNextChallenge(): String {
         if (challenges.isEmpty()) {
-            return "Nu există provocări disponibile"
+            return "Nu exista provocari"
         }
 
         // daca au fost folosite toate se ia de la inceput
@@ -42,6 +41,7 @@ class ProvocariGame {
 
 
     /*
+     //private val userWordsRepo = UserWordsRepository()
     fun getCurrentChallenge(): String = currentChallenge
 
     suspend fun loadChallenges() {

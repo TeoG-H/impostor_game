@@ -87,7 +87,7 @@ fun MainMenuScreen( userName: String,  photoUrl: String?, onSignOut: () -> Unit)
             ) {
                 AsyncImage(
                     model = photoUrl,
-                    contentDescription = "Profile picture",
+                    contentDescription = "",
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)

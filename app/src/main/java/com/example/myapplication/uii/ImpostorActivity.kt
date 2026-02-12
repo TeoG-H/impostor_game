@@ -26,10 +26,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.game.ImpostorGame
 import com.example.myapplication.data.GameMode
 import com.example.myapplication.data.UserWordsRepository
-import com.example.myapplication.data.WordRepository
 import com.example.myapplication.ui.theme.AppColors
 import com.example.myapplication.ui.theme.AppTypography
 import kotlinx.coroutines.launch
@@ -37,20 +35,11 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.myapplication.ui.theme.ButtonS
 import com.example.myapplication.ui.theme.SecondaryButton
 import com.example.myapplication.ui.theme.ModeButton
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.uii.View.ImpostorViewModel
+import com.example.myapplication.uii.View.ImpostorState
+import com.example.myapplication.uii.View.WordSource
 
-
-enum class ImpostorUiState {
-    MODE_SELECT,
-    INPUT,
-    GAME,
-    VIEW_WORDS,
-    ADD_WORD
-}
-
-enum class WordSource {
-    DEFAULT,
-    PERSONALIZAT
-}
 
 class ImpostorActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,95 +51,62 @@ class ImpostorActivity : ComponentActivity() {
 }
 
 @Composable
-fun ImpostorScreen() {
-
+fun ImpostorScreen(viewModel: ImpostorViewModel = viewModel()) {
     val context = LocalContext.current
-    val game = remember { ImpostorGame() }
     val wordsRepo = remember { UserWordsRepository() }
     val scope = rememberCoroutineScope()
 
-    var screen by remember { mutableStateOf(ImpostorUiState.MODE_SELECT) }
-    var selectedMode by remember { mutableStateOf<GameMode?>(null) }
-    var inputText by remember { mutableStateOf("") }
-    var players by remember { mutableIntStateOf(0) }
-    var resetKey by remember { mutableIntStateOf(0) }
+    val uiState by viewModel.uiState.collectAsState()
+
     var userWords by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var userWordsWithHint by remember { mutableStateOf<List<Triple<String, String, String>>>(emptyList()) }
 
     var newWord by remember { mutableStateOf("") }
     var newHint by remember { mutableStateOf("") }
 
-    var showSuccessDialog by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
-    var refresh by remember { mutableIntStateOf(0) }
-    var cachedWords by remember { mutableStateOf<List<String>>(emptyList()) }
-    var cachedPairs by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-    var wordSource by remember { mutableStateOf(WordSource.PERSONALIZAT) }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
             .background(Brush.verticalGradient(colors = AppColors.backgroundGradient)),
         contentAlignment = Alignment.Center
     ) {
-
-        Column(
-            modifier = Modifier
-                .width(340.dp)
+        Column(modifier = Modifier.width(340.dp)
                 .background(AppColors.White, RoundedCornerShape(16.dp))
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
-
         ) {
 
-            if (screen == ImpostorUiState.MODE_SELECT) {
-                Text(
-                    text = "Impostor",
+            if (uiState.screen == ImpostorState.MODE_SELECT) {
+                Text(text = "Impostor",
                     style = AppTypography.titleLarge,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
+                    modifier = Modifier.padding(bottom = 24.dp))
             }
 
-            when (screen) {
+            when (uiState.screen) {
 
-                ImpostorUiState.MODE_SELECT -> {
-                    ModeButton("Fără ajutor") {
-                        selectedMode = GameMode.FARA_AJUTOR; screen = ImpostorUiState.INPUT
-                    }
+                ImpostorState.MODE_SELECT -> {
+                    ModeButton("Fără ajutor") { viewModel.selectMode(GameMode.FARA_AJUTOR) }
 
-                    ModeButton("Cu ajutor") {
-                        selectedMode = GameMode.CU_AJUTOR; screen = ImpostorUiState.INPUT
-                    }
+                    ModeButton("Cu ajutor") { viewModel.selectMode(GameMode.CU_AJUTOR) }
 
-                    ModeButton("Cuvânt similar") {
-                        selectedMode = GameMode.CUVANT_SIMILAR; screen = ImpostorUiState.INPUT
-                    }
+                    ModeButton("Cuvânt similar") { viewModel.selectMode(GameMode.CUVANT_SIMILAR) }
 
-                    ModeButton("Număr") {
-                        selectedMode = GameMode.NUMAR; screen = ImpostorUiState.INPUT
-                    }
+                    ModeButton("Număr") { viewModel.selectMode(GameMode.NUMAR) }
 
-                    SecondaryButton("Înapoi") {
-                        (context as? ComponentActivity)?.finish()
-                    }
+                    SecondaryButton("Înapoi") { (context as? ComponentActivity)?.finish() }
                 }
 
 
-                ImpostorUiState.INPUT -> {
-                    if (selectedMode != GameMode.NUMAR) {
+                ImpostorState.INPUT -> {
+                    if (uiState.selectedMode != GameMode.NUMAR) {
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 6.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = AppColors.VeryLightPurple
-                            )
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                            colors = CardDefaults.cardColors(containerColor = AppColors.VeryLightPurple)
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -162,7 +118,7 @@ fun ImpostorScreen() {
                                         color = AppColors.Purple
                                     )
                                     Text(
-                                        text = if (wordSource == WordSource.DEFAULT)
+                                        text = if (uiState.wordSource == WordSource.DEFAULT)
                                             "Doar cuvinte default"
                                         else
                                             "Default + personalizate",
@@ -172,9 +128,11 @@ fun ImpostorScreen() {
                                 }
 
                                 Switch(
-                                    checked = wordSource == WordSource.PERSONALIZAT,
+                                    checked = uiState.wordSource == WordSource.PERSONALIZAT,
                                     onCheckedChange = { isChecked ->
-                                        wordSource = if (isChecked) WordSource.PERSONALIZAT else WordSource.DEFAULT
+                                        viewModel.changeWordSource(
+                                            if (isChecked) WordSource.PERSONALIZAT else WordSource.DEFAULT
+                                        )
                                     },
                                     colors = SwitchDefaults.colors(
                                         checkedThumbColor = AppColors.Purple,
@@ -186,118 +144,50 @@ fun ImpostorScreen() {
                     }
 
                     OutlinedTextField(
-                        value = inputText,
-                        onValueChange = { new ->
-                            if (new.all { it.isDigit() } && new.length <= 2) {
-                                inputText = new
-                            }
-                        },
+                        value = uiState.inputText,
+                        onValueChange = { viewModel.updateInput(it) },
                         label = { Text("Nr jucători (3-10)") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 6.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
 
+                    val isInputValid = uiState.inputText.toIntOrNull()?.let { it in 3..10 } == true
 
-                    val isInputValid = inputText.toIntOrNull()?.let { it in 3..10 } == true
-
-                    ButtonS("Start", enabled = isInputValid, isLoading = isLoading) {
-                        val value = inputText.toIntOrNull() ?: return@ButtonS
-                        if (value !in 3..10) return@ButtonS
-
-                        players = value
-                        isLoading = true
-
-                        scope.launch {
-                            try {
-                                when (selectedMode) {
-
-                                    GameMode.FARA_AJUTOR, GameMode.NUMAR -> {
-                                        val defaultList = WordRepository.getWords(selectedMode!!)
-
-                                        cachedWords = if (selectedMode == GameMode.NUMAR) {
-                                            defaultList
-                                        } else {
-                                            if (wordSource == WordSource.DEFAULT) {
-                                                defaultList
-                                            } else {
-                                                val userWordsList = wordsRepo.getWords(selectedMode!!)
-                                                val userList = userWordsList.map { it.second }
-                                                (defaultList + userList).distinct()
-                                            }
-                                        }
-                                    }
-
-                                    GameMode.CU_AJUTOR, GameMode.CUVANT_SIMILAR -> {
-                                        val defaultPairs = WordRepository.getPair(selectedMode!!)
-
-                                        cachedPairs = if (wordSource == WordSource.DEFAULT) {
-                                            defaultPairs
-                                        } else {
-                                            val userPairsList = wordsRepo.getWordsWithHint(selectedMode!!)
-                                            val userList = userPairsList.map { Pair(it.second, it.third) }
-                                            (defaultPairs + userList).distinct()
-                                        }
-                                    }
-
-                                    else -> {}
-                                }
-
-                                game.startFromCache(players, selectedMode!!, cachedWords, cachedPairs)
-                                resetKey++
-                                screen = ImpostorUiState.GAME
-
-                            } catch (e: Exception) {
-                                Toast.makeText(
-                                    context,
-                                    "Eroare la încărcarea jocului",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            } finally {
-                                isLoading = false
-                            }
-                        }
+                    ButtonS("Start", enabled = isInputValid, isLoading = uiState.isLoading) {
+                        viewModel.startGame()
                     }
 
-
-                    if (selectedMode != GameMode.NUMAR) {
+                    if (uiState.selectedMode != GameMode.NUMAR) {
                         ButtonS("Vezi lista de cuvinte") {
-                            screen = ImpostorUiState.VIEW_WORDS
+                            viewModel.goTo(ImpostorState.VIEW_WORDS)
                         }
 
                         ButtonS("Adaugă cuvânt nou") {
                             newWord = ""
                             newHint = ""
-                            screen = ImpostorUiState.ADD_WORD
+                            viewModel.goTo(ImpostorState.ADD_WORD)
                         }
-
                     }
 
                     SecondaryButton("Înapoi") {
-                        screen = ImpostorUiState.MODE_SELECT
+                        viewModel.goTo(ImpostorState.MODE_SELECT)
                     }
-
                 }
 
 
-                ImpostorUiState.VIEW_WORDS -> {
+                ImpostorState.VIEW_WORDS -> {
 
                     LaunchedEffect(Unit) {
                         isLoading = true
                         try {
-                            if (selectedMode == GameMode.CU_AJUTOR || selectedMode == GameMode.CUVANT_SIMILAR) {
-                                userWordsWithHint = wordsRepo.getWordsWithHint(selectedMode!!)
+                            if (uiState.selectedMode == GameMode.CU_AJUTOR || uiState.selectedMode == GameMode.CUVANT_SIMILAR) {
+                                userWordsWithHint = wordsRepo.getWordsWithHint(uiState.selectedMode!!)
                             } else {
-                                userWords = wordsRepo.getWords(selectedMode!!)
+                                userWords = wordsRepo.getWords(uiState.selectedMode!!)
                             }
                         } catch (e: Exception) {
-                            Toast.makeText(
-                                context,
-                                "Eroare la încărcarea cuvintelor",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(context, "Eroare la incarcarea cuvintelor", Toast.LENGTH_SHORT).show()
                         } finally {
                             isLoading = false
                         }
@@ -321,16 +211,15 @@ fun ImpostorScreen() {
                                 .heightIn(max = 300.dp)
                                 .padding(vertical = 8.dp)
                         ) {
-                            if (selectedMode == GameMode.CU_AJUTOR || selectedMode == GameMode.CUVANT_SIMILAR) {
+                            if (uiState.selectedMode == GameMode.CU_AJUTOR || uiState.selectedMode == GameMode.CUVANT_SIMILAR) {
                                 items(userWordsWithHint) { (id, word, hint) ->
                                     WordItemWithHint(
                                         word = word,
                                         hint = hint,
                                         onDelete = {
-                                            userWordsWithHint =
-                                                userWordsWithHint.filter { it.first != id }
+                                            userWordsWithHint = userWordsWithHint.filter { it.first != id }
                                             scope.launch {
-                                                wordsRepo.deleteWord(selectedMode!!, id)
+                                                wordsRepo.deleteWord(uiState.selectedMode!!, id)
                                             }
                                         }
                                     )
@@ -342,7 +231,7 @@ fun ImpostorScreen() {
                                         onDelete = {
                                             userWords = userWords.filter { it.first != id }
                                             scope.launch {
-                                                wordsRepo.deleteWord(selectedMode!!, id)
+                                                wordsRepo.deleteWord(uiState.selectedMode!!, id)
                                             }
                                         }
                                     )
@@ -351,13 +240,13 @@ fun ImpostorScreen() {
                         }
                     }
 
-
-                    SecondaryButton("Înapoi") { inputText = ""; screen = ImpostorUiState.INPUT }
-
+                    SecondaryButton("Înapoi") {
+                        viewModel.goTo(ImpostorState.INPUT)
+                    }
                 }
 
 
-                ImpostorUiState.ADD_WORD -> {
+                ImpostorState.ADD_WORD -> {
 
                     Text(
                         text = "Adaugă cuvânt nou",
@@ -373,13 +262,13 @@ fun ImpostorScreen() {
                         singleLine = true
                     )
 
-                    if (selectedMode == GameMode.CU_AJUTOR || selectedMode == GameMode.CUVANT_SIMILAR) {
+                    if (uiState.selectedMode == GameMode.CU_AJUTOR || uiState.selectedMode == GameMode.CUVANT_SIMILAR) {
                         OutlinedTextField(
                             value = newHint,
                             onValueChange = { newHint = it },
                             label = {
                                 Text(
-                                    if (selectedMode == GameMode.CU_AJUTOR)
+                                    if (uiState.selectedMode == GameMode.CU_AJUTOR)
                                         "Hint"
                                     else
                                         "Cuvânt similar"
@@ -388,78 +277,70 @@ fun ImpostorScreen() {
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
-
                     }
 
                     ButtonS(
                         text = "Salvează",
                         enabled = newWord.isNotBlank()
                     ) {
-
                         val wordToAdd = newWord.trim()
                         val hintToAdd = newHint.trim()
 
                         newWord = ""
                         newHint = ""
-                        showSuccessDialog = true
+                        viewModel.showDialog()
 
                         scope.launch {
                             try {
-
-                                val success = wordsRepo.addWord(mode = selectedMode!!, word = wordToAdd, hint = hintToAdd)
-
+                                wordsRepo.addWord(
+                                    mode = uiState.selectedMode!!,
+                                    word = wordToAdd,
+                                    hint = hintToAdd
+                                )
                             } catch (e: Exception) {
-                                Toast.makeText(context, "Cuvântul nu a putut fi adăugat", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Cuvantul nu a putut fi adaugat", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
 
-
                     SecondaryButton("Înapoi") {
-                        inputText = ""; screen = ImpostorUiState.INPUT
+                        viewModel.goTo(ImpostorState.INPUT)
                     }
                 }
 
 
-                ImpostorUiState.GAME -> {
+                ImpostorState.GAME -> {
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        modifier = Modifier
-                            .heightIn(max = 500.dp)
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.heightIn(max = 500.dp).padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        items(players) { index ->
-                            ImpostorCell(resetKey = resetKey) {
-                                game.getTextForPlayer(index + 1)
+                        items(uiState.players) { index ->
+                            ImpostorCell(resetKey = uiState.resetKey) {
+                                viewModel.getTextForPlayer(index + 1)
                             }
                         }
                     }
 
-
                     ButtonS("Reset") {
-                        game.startFromCache(players, selectedMode!!, cachedWords, cachedPairs)
-                        resetKey++
+                        viewModel.resetGame()
                     }
-
 
                     Spacer(Modifier.height(8.dp))
 
                     SecondaryButton("Înapoi") {
-                        inputText = ""
-                        screen = ImpostorUiState.MODE_SELECT
+                        viewModel.goTo(ImpostorState.MODE_SELECT)
                     }
                 }
             }
         }
     }
 
-
-    if (showSuccessDialog) {
+    if (uiState.showSuccessDialog) {
         AlertDialog(
-            onDismissRequest = { showSuccessDialog = false },
+            onDismissRequest = { viewModel.dismissDialog() },
             title = {
                 Text(
                     text = "✓ Succes!",
@@ -472,10 +353,8 @@ fun ImpostorScreen() {
             },
             confirmButton = {
                 Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.Purple
-                    ),
-                    onClick = { showSuccessDialog = false }
+                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.Purple),
+                    onClick = { viewModel.dismissDialog() }
                 ) {
                     Text("OK")
                 }
@@ -487,20 +366,15 @@ fun ImpostorScreen() {
 
 
 @Composable
-fun WordItem(word: String, onDelete: () -> Unit)
-{
+fun WordItem(word: String, onDelete: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = AppColors.VeryLightPurple
         )
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -525,20 +399,13 @@ fun WordItem(word: String, onDelete: () -> Unit)
 }
 
 @Composable
-fun WordItemWithHint(word: String, hint: String, onDelete: () -> Unit)
-{
+fun WordItemWithHint(word: String, hint: String, onDelete: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = AppColors.VeryLightPurple
-        )
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = AppColors.VeryLightPurple)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
